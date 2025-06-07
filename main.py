@@ -8,4 +8,8 @@ import matplotlib.pyplot
 # Constants
 
 # Taking Ticker Data 
-tickers = pd.read_csv('ticker_data.csv')
+tickers_df = pd.read_csv('ticker_data.csv')
+
+# Test Output
+print(tickers_df.head())
+print("hallo")
