@@ -28,9 +28,10 @@ riskfree_rate = riskfree_rate_df.iloc[-1].item()/100 # iloc lets us take the mos
 
 # Volatility
 deviations_df = returns_df - expected_returns_series # Deviation from mean is essential for volatility calculation
-deviations_squared_df = deviations_df ** 2
+deviations_squared_df = deviations_df ** 2 
 sum_of_deviations_squared_series = deviations_squared_df.sum()
-
+volatility_series = numpy.sqrt(sum_of_deviations_squared_series / len(deviations_squared_df.index)) 
+# Sum of square deviations by number of items -1 gives us variance, and root of that gives us volatility
 
 # Test Output
 print("\n")
@@ -53,4 +54,5 @@ print("Sum of deviations squared")
 print(sum_of_deviations_squared_series)
 print("\n")
 print("Risk free rate: " + str(riskfree_rate))
-
+print("\n")
+print(volatility_series)
