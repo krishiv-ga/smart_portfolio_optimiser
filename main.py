@@ -46,16 +46,27 @@ weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])  # Temporary hotfix, will automati
 # TODO: Scale with ticker count rather than be hard coded- also empty cells on defining as optimiser will autofill
 
 # Portfolio Return
-portfolio_return = np.dot(weights, expected_returns_array) #weighted returns cause that's how we 'optimise' the portfolio- kind of the whole point
+# portfolio_return = np.dot(weights, expected_returns_array) #weighted returns cause that's how we 'optimise' the portfolio- kind of the whole point
 
 # Portfolio Variance
-portfolio_variance_matrix = np.dot(weights.T, np.dot(cov_matrix.values, weights)) 
+# portfolio_variance_matrix = np.dot(weights.T, np.dot(cov_matrix.values, weights)) 
 # weights.T transposes so the shape of the datasets matches
-portfolio_volatility = np.sqrt(portfolio_variance_matrix)
+# portfolio_volatility = np.sqrt(portfolio_variance_matrix)
 
 # Sharpe Ratio
 # Moment of truth...
-sharpe_ratio = (portfolio_return - riskfree_rate)/portfolio_volatility
+# sharpe_ratio = (portfolio_return - riskfree_rate)/portfolio_volatility
+# negative_sharpe_ratio = -sharpe_ratio
+
+# Optimiser time!
+# This is the objective function that needs to be optimised, with the sharpe ratio being the 'y' in this case
+def negative_sharpe_ratio(weights, expected_return, cov_matrix, riskfree_rate):
+    portfolio_return = np.dot(weights, expected_return)
+    portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+    sharpe_ratio = (portfolio_return - riskfree_rate) / portfolio_volatility
+    return -sharpe_ratio
+
+sharpe_ratio  = -1*negative_sharpe_ratio(weights, expected_returns_array, cov_matrix, riskfree_rate)
 
 # Test Output
 print("\n")
@@ -83,8 +94,8 @@ print(cov_matrix)
 print("\n")
 print("Risk free rate: " + str(riskfree_rate * 100) + "%")
 print("\n")
-print("Portfolio Return: "  + str(portfolio_return * 100) + "%")
-print("\n")
-print("Portfolio Volatility: "  + str(portfolio_volatility * 100) + "%")
-print("\n")
+# print("Portfolio Return: "  + str(portfolio_return * 100) + "%")
+# print("\n")
+# print("Portfolio Volatility: "  + str(portfolio_volatility * 100) + "%")
+# print("\n")
 print("Sharpe Ratio: "  + str(sharpe_ratio))
