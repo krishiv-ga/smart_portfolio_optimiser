@@ -2,7 +2,7 @@
 import yfinance as yf
 import pandas as pd
 import numpy as np
-import scipy.optimize
+from scipy.optimize import minimize
 import matplotlib.pyplot
 
 # Constants
@@ -28,6 +28,7 @@ expected_returns_array = expected_returns_series.values
 # Getting the risk free rate
 riskfree_rate_df = riskfree_rate_df['Close']
 riskfree_rate = riskfree_rate_df.iloc[-1].item()/100 # iloc lets us take the most recent datapoint (last one in the dataset) as the updated riskfree rate
+riskfree_rate = riskfree_rate/12 # Risk free rates are annualised and need to be converted to monthly
 # Using .item() to extraploate only the integer value and not the other random metadata that pandas shovels out
 
 # Volatility
@@ -59,6 +60,20 @@ weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])  # Temporary hotfix, will automati
 # negative_sharpe_ratio = -sharpe_ratio
 
 # Optimiser time!
+# Blank array of weights for optimiser to fill in values for
+num_assets = len(expected_returns_series)
+initial_weights = np.array([1/num_assets] * num_assets)
+
+# All weights need to equal to 1 cause the logic is broken otherwise
+constraints = ({
+    'type': 'eq', # Needs a equality constraint
+    'fun': lambda w: np.sum(w) - 1 # Sum of weights needs to equal 1, not less nor more
+})
+
+# Limiting range of weights from 0 to 1
+bounds = tuple((0, 1) for _ in range(num_assets))
+
+
 # This is the objective function that needs to be optimised, with the sharpe ratio being the 'y' in this case
 def negative_sharpe_ratio(weights, expected_return, cov_matrix, riskfree_rate):
     portfolio_return = np.dot(weights, expected_return)
@@ -67,6 +82,18 @@ def negative_sharpe_ratio(weights, expected_return, cov_matrix, riskfree_rate):
     return -sharpe_ratio
 
 sharpe_ratio  = -1*negative_sharpe_ratio(weights, expected_returns_array, cov_matrix, riskfree_rate)
+
+result = minimize(
+    fun=negative_sharpe_ratio,
+    x0=initial_weights,
+    args=(expected_returns_array, cov_matrix.values, riskfree_rate),
+    method='SLSQP',
+    bounds=bounds,
+    constraints=constraints
+)
+
+optimal_weights = result.x
+max_sharpe = -result.fun  # Minimised optimal sharpe
 
 # Test Output
 print("\n")
@@ -99,3 +126,7 @@ print("\n")
 # print("Portfolio Volatility: "  + str(portfolio_volatility * 100) + "%")
 # print("\n")
 print("Sharpe Ratio: "  + str(sharpe_ratio))
+print("\n")
+print("Optimal Weights: " + str(optimal_weights))
+print("\n")
+print("Optimal Sharpe: " + str(max_sharpe))
