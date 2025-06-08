@@ -26,6 +26,11 @@ riskfree_rate_df = riskfree_rate_df['Close']
 riskfree_rate = riskfree_rate_df.iloc[-1].item()/100 # iloc lets us take the most recent datapoint (last one in the dataset) as the updated riskfree rate
 # Using .item() to extraploate only the integer value and not the other random metadata that pandas shovels out
 
+# Volatility
+deviations_df = returns_df - expected_returns_series # Deviation from mean is essential for volatility calculation
+deviations_squared_df = deviations_df ** 2
+sum_of_deviations_squared_series = deviations_squared_df.sum()
+
 
 # Test Output
 print("\n")
@@ -38,4 +43,14 @@ print("\n")
 print("E(X) returns")
 print(expected_returns_series)
 print("\n")
+print("Deviations")
+print(deviations_df.head())
+print("\n")
+print("Deviations squared")
+print(deviations_squared_df.head())
+print("\n")
+print("Sum of deviations squared")
+print(sum_of_deviations_squared_series)
+print("\n")
 print("Risk free rate: " + str(riskfree_rate))
+
