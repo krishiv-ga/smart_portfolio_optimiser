@@ -12,21 +12,30 @@ tickers_df = pd.read_csv('ticker_data.csv', index_col=0) # Test dataset before I
 # Key variables
 riskfree_rate = 0
 
-# Creating dataframe of returns by finding the percentage change from before to now
+# Need % change for expected return calc, curve structure should be the same
 returns_df = tickers_df.pct_change()
 
-# Deleting all the NaN values that come up in the first row because there is nothing to divide against
+# Takin out the trash
 returns_df = tickers_df.pct_change().dropna() 
 
-# Finding Expected return using the mean of all historical returns
+# Expected return = historical returns/number of datapoints (aka mean)
 expected_returns_series = returns_df.mean()
 
 # Getting the risk free rate
 riskfree_rate_df = riskfree_rate_df['Close']
-riskfree_rate = riskfree_rate_df.iloc[-1] * 100
+riskfree_rate = riskfree_rate_df.iloc[-1].item()/100 # iloc lets us take the most recent datapoint (last one in the dataset) as the updated riskfree rate
+# Using .item() to extraploate only the integer value and not the other random metadata that pandas shovels out
+
 
 # Test Output
+print("\n")
+print("Risk Free Rates")
 print(riskfree_rate_df.head())
-print(riskfree_rate)
+print("\n")
+print("% Returns")
 print(returns_df.head())
+print("\n")
+print("E(X) returns")
 print(expected_returns_series)
+print("\n")
+print("Risk free rate: " + str(riskfree_rate))
