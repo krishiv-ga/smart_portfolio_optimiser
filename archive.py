@@ -14,7 +14,6 @@ riskfree_rate = 0
 portfolio_return = 0
 portfolio_volatility = 0
 
-
 # Need % change for expected return calc, curve structure should be the same
 returns_df = tickers_df.pct_change()
 
@@ -127,6 +126,6 @@ print("\n")
 # print("\n")
 print("Sharpe Ratio: "  + str(sharpe_ratio))
 print("\n")
-print("Optimal Weights: " + str(optimal_weights))
-print("\n")
+for ticker, weight in zip(expected_returns_series.index, optimal_weights):
+    print(f"{ticker}: {weight:.4f}")
 print("Optimal Sharpe: " + str(max_sharpe))
