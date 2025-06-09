@@ -5,16 +5,26 @@ from datetime import datetime, timedelta
 # Importing Ticker data
 # Sample test until proper yf ticker filtering is implemented
 def import_ticker():
-    return pd.read_csv('Optimizer/ticker_data.csv', index_col=0)
+    return pd.read_csv('ticker_universe.csv', index_col=0, parse_dates=True)
 
-# def get_user_tickers():
-#     tickers_input = input("Enter ticker symbols (comma-separated): ")
-#     tickers_input = tickers_input.upper()
-#     tickers_input.strip()
-#     tickers_input = tickers_input.split(",")
-#     return tickers_input
+def get_user_tickers():
+    tickers_input = input("Enter ticker symbols (comma-separated): ")
+    print("\n")
+    tickers_input = tickers_input.upper()
+    tickers_input = [ticker.strip() for ticker in tickers_input.split(",")]
+    return tickers_input
 
+def filter_tickers(full_df, user_tickers):
+    available_tickers = [ticker for ticker in user_tickers if ticker in full_df.columns]
+    missing_tickers = [ticker for ticker in user_tickers if ticker not in full_df.columns]
 
+    if missing_tickers:
+        print(f"⚠️ Warning: These tickers are not in the dataset and will be skipped: {missing_tickers}")
+
+    filtered_df = full_df[available_tickers]
+    return filtered_df
+
+# Depreciated since we use CSVs now
 # def download_tickers(user_tickers):
 #     today = datetime.today() # Current Date
 #     today = today.replace(day=1)
@@ -25,7 +35,7 @@ def import_ticker():
 #     raw_data = yf.download(tickers=user_tickers, start=start_date, end=end_date, interval="1mo", group_by="ticker", auto_adjust=False)
 #     # adj_close_data = raw_data.xs('Adj Close', axis=1, level=1)
     
-#     return raw_data # change back to adjusted close data
+    return raw_data # change back to adjusted close data
 
 def import_riskfree_rate():
     riskfree_rate_df = yf.download('^IRX', period='1mo') # 13 week treasury bills, annualised

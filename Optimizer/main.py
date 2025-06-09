@@ -1,14 +1,16 @@
 # Imports
-from dataloader import import_riskfree_rate, import_ticker, get_user_tickers, download_tickers
+from dataloader import import_riskfree_rate, import_ticker, get_user_tickers, filter_tickers
 from metrics import get_percent_returns, get_expected_return, get_volatility, get_covariance, get_number_of_assets
-from optimizer import create_initial_weights, negative_sharpe_ratio, minimize_negative_sharpe_ratio
+# from optimizer import create_initial_weights, negative_sharpe_ratio, minimize_negative_sharpe_ratio
+from optimizer import create_initial_weights, entropy, negative_sharpe_with_entropy, minimize_negative_sharpe_ratio_with_entropy
 
 # Main
 if __name__ == "__main__":
-    # ticker_df = import_ticker() # Obtain our ticker data
-    user_tickers = get_user_tickers()
+    ticker_full_df = import_ticker()
 
-    ticker_df = download_tickers(user_tickers)
+    user_tickers = get_user_tickers() # AAPL, META, AMZN, NFLX, GOOGL, MSFT, AXP
+
+    ticker_df = filter_tickers(ticker_full_df, user_tickers)
 
     riskfree_rate = import_riskfree_rate() # Obtain our risk free rate 
 
@@ -24,27 +26,34 @@ if __name__ == "__main__":
 
     initial_weights = create_initial_weights(number_of_assets) # Blank array for optimizer to fill
 
+    entropy_weight = entropy(initial_weights)
     # DO NOT calculate sharpe_ratio beforehand
     # Instead, pass the function itself
-    optimal_weights, max_sharpe = minimize_negative_sharpe_ratio(
-        number_of_assets, negative_sharpe_ratio, initial_weights, expected_returns_series, covariance_df, riskfree_rate)
+    optimal_weights, max_sharpe = minimize_negative_sharpe_ratio_with_entropy(
+    number_of_assets,
+    initial_weights,
+    expected_returns_series.values,
+    covariance_df,
+    riskfree_rate,
+    entropy_weight=0.05  # optional: tune this
+)
 
     # Test Output section
-    print("\n")
-    print("Tickers (df)")
-    print(ticker_df.head)
-    print("\n")
-    print("Percent Returns (df)")
-    print(percent_returns_df)
-    print("\n")
-    print("Covariance (df)")
-    print(covariance_df)
-    print("\n")
-    print("Expected Returns (series)")
-    print(expected_returns_series)
-    print("\n")
-    print("Volatility (series)")
-    print(volatility_series)
+    # print("\n")
+    # print("Tickers (df)")
+    # print(ticker_df.head)
+    # print("\n")
+    # print("Percent Returns (df)")
+    # print(percent_returns_df)
+    # print("\n")
+    # print("Covariance (df)")
+    # print(covariance_df)
+    # print("\n")
+    # print("Expected Returns (series)")
+    # print(expected_returns_series)
+    # print("\n")
+    # print("Volatility (series)")
+    # print(volatility_series)
     print("\n")
     print("Risk free rate: " + str(riskfree_rate*100) + "%")
     print("\n")
