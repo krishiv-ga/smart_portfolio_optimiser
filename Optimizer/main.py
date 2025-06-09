@@ -1,10 +1,14 @@
 # Imports
-from dataloader import import_riskfree_rate, import_ticker
+from dataloader import import_riskfree_rate, import_ticker, get_user_tickers, download_tickers
 from metrics import get_percent_returns, get_expected_return, get_volatility, get_covariance, get_number_of_assets
 from optimizer import create_initial_weights, negative_sharpe_ratio, minimize_negative_sharpe_ratio
+
+# Main
 if __name__ == "__main__":
-    # print("Works!") #run code here
-    ticker_df = import_ticker() # Obtain our ticker data
+    # ticker_df = import_ticker() # Obtain our ticker data
+    user_tickers = get_user_tickers()
+
+    ticker_df = download_tickers(user_tickers)
 
     riskfree_rate = import_riskfree_rate() # Obtain our risk free rate 
 
@@ -26,7 +30,6 @@ if __name__ == "__main__":
         number_of_assets, negative_sharpe_ratio, initial_weights, expected_returns_series, covariance_df, riskfree_rate)
 
     # Test Output section
-    # print("\n")
     print("\n")
     print("Tickers (df)")
     print(ticker_df.head)
@@ -47,6 +50,7 @@ if __name__ == "__main__":
     print("\n")
     print("Number of assets: " + str(number_of_assets))
     print("\n")
+    print("Optimal Weights")
     for ticker, weight in zip(expected_returns_series.index, optimal_weights):
         print(f"{ticker}: {weight:.4f}")
     print("\n")
