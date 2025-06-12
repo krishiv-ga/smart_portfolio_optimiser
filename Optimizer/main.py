@@ -1,66 +1,86 @@
-# Imports
-from dataloader import import_riskfree_rate, import_ticker, get_user_tickers, filter_tickers
+
+    # app.py
+
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from dataloader import import_riskfree_rate, import_ticker, filter_tickers
 from metrics import get_percent_returns, get_expected_return, get_volatility, get_covariance, get_number_of_assets
-# from optimizer import create_initial_weights, negative_sharpe_ratio, minimize_negative_sharpe_ratio
-from optimizer import create_initial_weights, entropy, negative_sharpe_with_entropy, minimize_negative_sharpe_ratio_with_entropy
+from optimizer import create_initial_weights, entropy, minimize_negative_sharpe_ratio_with_entropy
 
-# Main
-if __name__ == "__main__":
-    ticker_full_df = import_ticker()
+# Setup
+st.set_page_config(page_title="Smart Portfolio Optimizer", layout="wide")
+st.title("📊 Smart Portfolio Optimizer")
 
-    user_tickers = get_user_tickers() # AAPL, META, AMZN, NFLX, GOOGL, MSFT, AXP
+# Step 1: Load full ticker data
+ticker_full_df = import_ticker()  # This must include 'Symbol' and 'Name' columns
 
-    ticker_df = filter_tickers(ticker_full_df, user_tickers)
+# Prepare ticker-name map
+ticker_names = {
+    row['Symbol']: f"{row['Symbol']} - {row['Name']}" for _, row in ticker_full_df.iterrows()
+}
 
-    riskfree_rate = import_riskfree_rate() # Obtain our risk free rate 
-
-    percent_returns_df = get_percent_returns(ticker_df) # Need to use percent returns to show change
-
-    expected_returns_series = get_expected_return(percent_returns_df) # Expected returns needed for pretty much all the math
-
-    volatility_series = get_volatility(percent_returns_df, expected_returns_series) # Volatility of each ticker
-
-    covariance_df = get_covariance(percent_returns_df) # Covariance of each ticker with each other
-
-    number_of_assets =  get_number_of_assets(ticker_df.columns) # Need to select the number of tickers we are considering
-
-    initial_weights = create_initial_weights(number_of_assets) # Blank array for optimizer to fill
-
-    entropy_weight = entropy(initial_weights)
-    # DO NOT calculate sharpe_ratio beforehand
-    # Instead, pass the function itself
-    optimal_weights, max_sharpe = minimize_negative_sharpe_ratio_with_entropy(
-    number_of_assets,
-    initial_weights,
-    expected_returns_series.values,
-    covariance_df,
-    riskfree_rate,
-    entropy_weight=0.05  # optional: tune this
+# Step 2: Multiselect UI
+selected_symbols = st.multiselect(
+    "Select Stocks for Portfolio Optimization:",
+    options=list(ticker_names.keys()),
+    format_func=lambda x: ticker_names[x],
+    default=["AAPL", "MSFT", "AMZN"]  # Set some good defaults
 )
 
-    # Test Output section
-    print("\n")
-    print("Tickers (df)")
-    print(ticker_df.head)
-    print("\n")
-    print("Percent Returns (df)")
-    print(percent_returns_df)
-    print("\n")
-    print("Covariance (df)")
-    print(covariance_df)
-    print("\n")
-    print("Expected Returns (series)")
-    print(expected_returns_series)
-    print("\n")
-    print("Volatility (series)")
-    print(volatility_series)
-    print("\n")
-    print("Risk free rate: " + str(riskfree_rate*100) + "%")
-    print("\n")
-    print("Number of assets: " + str(number_of_assets))
-    print("\n")
-    print("Optimal Weights")
-    for ticker, weight in zip(expected_returns_series.index, optimal_weights):
-        print(f"{ticker}: {weight:.4f}")
-    print("\n")
-    print("Max Sharpe Ratio: " + str(max_sharpe))
+if selected_symbols:
+    if st.button("Optimize Portfolio"):
+        try:
+            # Step 3: Run optimizer
+            ticker_df = filter_tickers(ticker_full_df, selected_symbols)
+            riskfree_rate = import_riskfree_rate()
+
+            percent_returns_df = get_percent_returns(ticker_df)
+            expected_returns_series = get_expected_return(percent_returns_df)
+            volatility_series = get_volatility(percent_returns_df, expected_returns_series)
+            covariance_df = get_covariance(percent_returns_df)
+
+            number_of_assets = get_number_of_assets(ticker_df.columns)
+            initial_weights = create_initial_weights(number_of_assets)
+            entropy_weight = entropy(initial_weights)
+
+            optimal_weights, max_sharpe = minimize_negative_sharpe_ratio_with_entropy(
+                number_of_assets,
+                initial_weights,
+                expected_returns_series.values,
+                covariance_df,
+                riskfree_rate,
+                entropy_weight=0.05
+            )
+
+            # Step 4: Output
+            st.subheader("📈 Optimized Portfolio Results")
+            st.write(f"**Risk-Free Rate:** {riskfree_rate*100:.2f}%")
+            st.write(f"**Max Sharpe Ratio:** {max_sharpe:.4f}")
+
+            full_names = [ticker_names[symbol] for symbol in expected_returns_series.index]
+            results_df = pd.DataFrame({
+                "Stock": full_names,
+                "Symbol": expected_returns_series.index,
+                "Optimal Weight": optimal_weights,
+                "Expected Return": expected_returns_series.values,
+                "Volatility": volatility_series.values
+            })
+
+            st.dataframe(results_df.style.format({
+                "Optimal Weight": "{:.4f}",
+                "Expected Return": "{:.2%}",
+                "Volatility": "{:.2%}"
+            }))
+
+            # Pie Chart
+            fig, ax = plt.subplots()
+            ax.pie(optimal_weights, labels=full_names, autopct="%1.1f%%", startangle=90)
+            ax.axis("equal")
+            st.pyplot(fig)
+
+        except Exception as e:
+            st.error(f"⚠️ An error occurred: {e}")
+else:
+    st.info("Please select at least one stock to begin.")
