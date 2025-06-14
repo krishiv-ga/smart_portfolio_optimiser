@@ -4,6 +4,8 @@ from metrics import get_percent_returns, get_expected_return, get_volatility, ge
 # from optimizer import create_initial_weights, negative_sharpe_ratio, minimize_negative_sharpe_ratio
 from optimizer import create_initial_weights, entropy, negative_sharpe_with_entropy, minimize_negative_sharpe_ratio_with_entropy
 
+# Trying to get one commit in per day
+
 # Main
 if __name__ == "__main__":
     ticker_full_df = import_ticker()
